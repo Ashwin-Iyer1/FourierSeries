@@ -23,7 +23,9 @@ def fourier(l, n, f):
 
 # Example function: Semi-circle
 def f(x):
-    return np.sqrt(1 - x ** 2)
+    if x > 1 or x < -1:
+        return 0
+    return np.sqrt(1 - x**2)
 
 # Route to get Fourier coefficients
 @app.route('/fourier_coefficients')

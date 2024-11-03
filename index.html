@@ -2,36 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Fourier Series Visualization with Epicycles and Translation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fourier Series Visualization with Epicycles</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #111;
             color: #fff;
             text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            margin-top: 20px;
         }
         #controls {
             margin: 20px;
             display: flex;
             justify-content: center;
-            gap: 30px;
+            gap: 20px;
             flex-wrap: wrap;
         }
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
         label {
-            margin-bottom: 5px;
-        }
-        input[type="range"] {
-            width: 200px;
+            margin-right: 10px;
         }
         canvas {
             background-color: #000;
@@ -42,32 +30,27 @@
     </style>
 </head>
 <body>
-    <h1>Fourier Series Approximation with Epicycles and Translation</h1>
+    <h1>Fourier Series Approximation with Epicycles</h1>
     <div id="controls">
-        <!-- Number of Terms Slider -->
-        <div class="control-group">
-            <label for="termSlider">Number of Terms (n): <span id="termValue">20</span></label>
+        <div>
+            <label for="termSlider">Number of Terms (n): <span id="termValue">20</span></label><br>
             <input type="range" id="termSlider" min="1" max="50" value="20" />
         </div>
 
-        <!-- Circle Size Slider -->
-        <div class="control-group">
-            <label for="circleSizeSlider">Circle Size: <span id="circleSizeValue">1</span></label>
-            <input type="range" id="circleSizeSlider" min="0.5" max="300" step="0.1" value="20" />
+        <div>
+            <label for="circleSizeSlider">Circle Size: <span id="circleSizeValue">1</span></label><br>
+            <input type="range" id="circleSizeSlider" min="0.5" max="300" step="0.1" value="1" />
         </div>
 
-        <!-- Speed Slider -->
-        <div class="control-group">
-            <label for="speedSlider">Speed: <span id="speedValue">2</span></label>
+        <div>
+            <label for="speedSlider">Speed: <span id="speedValue">2</span></label><br>
             <input type="range" id="speedSlider" min="1" max="10" value="2" />
         </div>
+    </div>
 
-        <!-- Translate X Slider -->
-
-    <canvas id="fourierCanvas" width="1000" height="600"></canvas>
+    <canvas id="fourierCanvas" width="800" height="600"></canvas>
     
     <script>
-        // Get DOM elements
         const termSlider = document.getElementById("termSlider");
         const termValueDisplay = document.getElementById("termValue");
         const circleSizeSlider = document.getElementById("circleSizeSlider");
@@ -87,9 +70,7 @@
         let path = []; // Array to store the traced path
         let circleScale = 1;
 
-        // Translation offsets
-
-        // Function to fetch Fourier coefficients from the backend
+        // Fetch Fourier coefficients from the backend
         async function fetchCoefficients(n) {
             try {
                 const response = await fetch(`http://localhost:5001/fourier_coefficients?n=${n}`);
@@ -104,11 +85,33 @@
             }
         }
 
-        // Function to draw epicycles and trace the path with translation
+        // Draw grid lines (optional)
+        function drawGrid() {
+            ctx.strokeStyle = "#333"; // Dark gray color for grid
+            ctx.lineWidth = 0.5;
+
+            // Vertical lines
+            for (let x = 0; x <= width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+
+            // Horizontal lines
+            for (let y = 0; y <= height; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+
+        // Function to draw epicycles and trace the path
         function drawEpicycles(a0, A, B, time, scale) {
-            // Starting point with translation
-            let x = width / 4;
-            let y = height / 2  ;
+            // Starting point (base of the first epicycle)
+            let x = width / 4; // Adjusted to have space for drawing
+            let y = height / 2;
 
             // Initial displacement from a0 (if any)
             x += (a0 / 2) * scale;
@@ -144,17 +147,16 @@
             // Add the current endpoint to the path
             path.unshift({ x: x, y: y });
 
-            // Draw the translated path
+            // Draw the traced path
             ctx.strokeStyle = "cyan";
             ctx.lineWidth = 2;
             ctx.beginPath();
             for (let i = 0; i < path.length; i++) {
-                const translatedX = path[i].x;
-                const translatedY = path[i].y;
+                const point = path[i];
                 if (i === 0) {
-                    ctx.moveTo(translatedX, translatedY);
+                    ctx.moveTo(point.x, point.y);
                 } else {
-                    ctx.lineTo(translatedX, translatedY);
+                    ctx.lineTo(point.x, point.y);
                 }
             }
             ctx.stroke();
@@ -171,6 +173,7 @@
             termValueDisplay.textContent = n; // Update displayed value
             circleSizeValueDisplay.textContent = circleSizeSlider.value; // Update circle size display
             speedValueDisplay.textContent = speedSlider.value; // Update speed display
+
             circleScale = parseFloat(circleSizeSlider.value);
 
             const data = await fetchCoefficients(n);
@@ -189,7 +192,10 @@
             ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
             ctx.fillRect(0, 0, width, height);
 
-            // Draw epicycles and trace the path with current translations
+            // Optionally draw grid
+            // drawGrid();
+
+            // Draw epicycles and trace the path
             drawEpicycles(a0, A, B, time, circleScale);
 
             // Increment time based on speed slider
@@ -204,7 +210,6 @@
         speedSlider.addEventListener("input", () => {
             speedValueDisplay.textContent = speedSlider.value; // Update speed display
         });
-
 
         // Initial visualization
         updateVisualization();
