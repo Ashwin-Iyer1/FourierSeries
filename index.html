@@ -34,7 +34,7 @@
     <div id="controls">
         <div>
             <label for="termSlider">Number of Terms (n): <span id="termValue">20</span></label><br>
-            <input type="range" id="termSlider" min="1" max="50" value="20" />
+            <input type="range" id="termSlider" min="1" max="100" value="20" />
         </div>
 
         <div>
@@ -45,6 +45,12 @@
         <div>
             <label for="speedSlider">Speed: <span id="speedValue">2</span></label><br>
             <input type="range" id="speedSlider" min="1" max="10" value="2" />
+        </div>
+        <div>
+            <input type="checkbox" id="useCSV"> Use CSV file </input>
+        </div>
+        <div>
+            <button onclick="updateVisualization()">Update Visualization</button>
         </div>
     </div>
 
@@ -73,12 +79,21 @@
         // Fetch Fourier coefficients from the backend
         async function fetchCoefficients(n) {
             try {
-                const response = await fetch(`http://localhost:5001/fourier_coefficients?n=${n}`);
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
+                if (document.getElementById("useCSV").checked) {
+                    const response = await fetch(`http://localhost:5001/fourier_coefficients_csv?n=${n}`);
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    const data = await response.json();
+                    return data;
+                } else {
+                    const response = await fetch(`http://localhost:5001/fourier_coefficients?n=${n}`);
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    const data = await response.json();
+                    return data;
                 }
-                const data = await response.json();
-                return data;
             } catch (error) {
                 console.error("Error fetching Fourier coefficients:", error);
                 return { a0: 0, A: [], B: [] };
@@ -114,7 +129,7 @@
             let y = height / 2;
 
             // Initial displacement from a0 (if any)
-            x += (a0 / 2) * scale;
+            y += a0 * scale; // 
 
             // Iterate through each Fourier term to draw epicycles
             for (let i = 1; i <= A.length; i++) {

@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import numpy as np
 from scipy.integrate import quad
+# from csvtopoints import f2, x_min, x_max
+
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS to allow requests from the frontend
@@ -23,9 +25,7 @@ def fourier(l, n, f):
 
 # Example function: Semi-circle
 def f(x):
-    if x > 1 or x < -1:
-        return 0
-    return np.sqrt(1 - x**2)
+    return np.sqrt(x) if x >= 0 else 0
 
 # Route to get Fourier coefficients
 @app.route('/fourier_coefficients')
@@ -34,6 +34,14 @@ def get_coefficients():
     n = int(request.args.get('n', 20))  
     a0, A, B = fourier(l, n, f)
     return jsonify({"a0": a0, "A": A, "B": B})
+
+
+# @app.route("/fourier_coefficients_csv")
+# def get_coefficients_csv():
+#     l = x_max - x_min
+#     n = int(request.args.get('n', 20))
+#     a0, A, B = fourier(l, n, f2)
+#     return jsonify({"a0": a0, "A": A, "B": B})
 
 if __name__ == "__main__":
     app.run(port=5001)
