@@ -3,6 +3,8 @@
 A browser-local signal analysis workspace: choose or draw a periodic waveform,
 compute its discrete Fourier transform, and reconstruct it harmonic by harmonic.
 
+**[Open the live lab](https://ashwiniyer.com/demos/fourier/index.html)** · [Read the case study](https://ashwiniyer.com/projects/fourier-lab)
+
 ## Run the lab
 
 No build step, dependencies, API key, or backend is needed. Serve only `web/`:
