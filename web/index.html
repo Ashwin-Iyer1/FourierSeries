@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101716" />
+  <meta name="description" content="An interactive Fourier signal lab. Draw a waveform, inspect its spectrum, and reconstruct it harmonic by harmonic." />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'" />
+  <title>Fourier Lab — from signal to spectrum</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#lab">Skip to signal lab</a>
+  <header class="topbar wrap">
+    <a class="brand" href="./"><span class="brand-symbol" aria-hidden="true">ƒ</span> FOURIER<span class="brand-light">/ LAB</span></a>
+    <div class="top-links"><span class="local-dot">COMPUTED IN YOUR BROWSER</span><a href="https://github.com/Ashwin-Iyer1/FourierSeries">Source ↗</a></div>
+  </header>
+  <main class="wrap">
+    <section class="hero">
+      <div><p class="eyebrow">SIGNALS, TAKEN APART.</p><h1>Complex shapes.<br /><em>Simple waves.</em></h1></div>
+      <div class="hero-copy"><p>Every periodic signal has a frequency story. Draw a shape, separate its harmonics, and see what it takes to put it back together.</p><a href="#method" class="quiet-link">Explore the mathematics <span>↓</span></a></div>
+    </section>
+    <div id="message" role="status" aria-live="polite" class="message" hidden></div>
+    <section id="lab" class="lab" aria-label="Interactive signal lab">
+      <aside class="controls">
+        <div class="control-group"><span class="section-index">01 / SOURCE</span><h2>Choose a signal</h2>
+          <label for="preset">Waveform</label><select id="preset"><option value="square">Square wave</option><option value="triangle">Triangle wave</option><option value="sawtooth">Sawtooth wave</option><option value="pulse">Pulse train</option><option value="mixture">Three-tone signal</option><option value="alias">Aliased sine · 200 → 56</option><option value="custom">Custom signal</option></select>
+          <button id="draw" class="button outline" aria-pressed="false">Draw your own <span>↗</span></button>
+          <p class="control-help">Sketch directly on the signal chart, or enter values below.</p>
+          <details class="sample-editor"><summary>Edit sample values</summary><label for="samples">Equally spaced values over one period</label><textarea id="samples" rows="4" spellcheck="false">0, 1, 0, -1</textarea><p class="control-help">4–1024 values. Periodically interpolated to 256 samples.</p><button id="apply-samples" class="button small">Apply values</button></details>
+        </div>
+        <div class="control-group"><span class="section-index">02 / RECONSTRUCTION</span><h2>Build it back</h2>
+          <div class="label-value"><label for="cutoff">Harmonic cutoff</label><output id="cutoff-value" for="cutoff">8</output></div>
+          <input id="cutoff" type="range" min="0" max="128" value="8" step="1" />
+          <div class="range-labels"><span>DC only</span><span>128 · Nyquist</span></div>
+          <div class="cutoff-shortcuts" aria-label="Harmonic cutoff shortcuts"><button data-cutoff="1">1</button><button data-cutoff="8">8</button><button data-cutoff="32">32</button><button data-cutoff="128">All</button></div>
+          <label for="method-select">Summation</label><select id="method-select"><option value="partial">Partial sum</option><option value="fejer">Fejér average</option></select>
+          <p id="method-note" class="control-help">Keeps every component up to the cutoff at its measured amplitude.</p>
+          <button id="restore" class="text-button" hidden>Restore muted components</button>
+        </div>
+        <div class="control-group export-group"><span class="section-index">03 / TAKE IT WITH YOU</span><button id="export-data" class="button outline">Export sample CSV <span>↓</span></button><button id="export-spectrum" class="text-button">Download coefficients CSV</button><button id="export-svg" class="text-button">Save signal chart as SVG</button></div>
+      </aside>
+      <div class="workspace">
+        <section class="signal-panel panel" aria-labelledby="signal-title">
+          <div class="panel-head"><div><p class="eyebrow">TIME DOMAIN</p><h2 id="signal-title">Square wave</h2><p id="signal-subtitle">A discontinuity, built from smooth waves.</p></div><span class="sample-badge">256 SAMPLES / PERIOD</span></div>
+          <div class="legend"><span><i class="original"></i>Input samples</span><span><i class="reconstruction"></i>Reconstruction</span><span id="drawing-hint" hidden>Drag to draw · values clipped to ±1.5</span></div>
+          <canvas id="signal" width="960" height="320" role="img" aria-label="Input and reconstructed signal over one period. Numerical metrics and exports are provided below."></canvas>
+          <div class="chart-axis"><span>Normalized time t / period</span><span id="point-readout">t = 0.250</span></div>
+          <div class="metrics" aria-label="Reconstruction metrics"><div><span>ROOT MEAN SQUARE ERROR</span><strong id="rmse">—</strong><p>on the 256 sample points</p></div><div><span>RECONSTRUCTED ENERGY</span><strong id="energy">—</strong><p>relative to input mean-square energy</p></div><div><span>INPUT MEAN / DC</span><strong id="dc">—</strong><p>the zero-frequency component</p></div></div>
+        </section>
+        <section class="spectrum-panel panel" aria-labelledby="spectrum-title">
+          <div class="panel-head"><div><p class="eyebrow">FREQUENCY DOMAIN</p><h2 id="spectrum-title">The ingredients</h2><p>Select a frequency to inspect or mute it.</p></div><label class="compact-label">Spectrum view<select id="spectrum-view"><option value="32">First 32</option><option value="128">All 128</option></select></label></div>
+          <div class="legend"><span><i class="reconstruction"></i>Included</span><span><i class="excluded"></i>Outside cutoff / muted</span><span>Height = input amplitude</span></div>
+          <canvas id="spectrum" width="960" height="210" role="img" aria-label="One-sided amplitude spectrum. Use the frequency selector below for accessible numerical details."></canvas>
+          <div class="component-inspector"><div><label for="component">Frequency bin</label><input id="component" type="number" min="0" max="128" value="1" /></div><div><span>AMPLITUDE</span><strong id="component-amplitude">—</strong></div><div><span>PHASE · RADIANS</span><strong id="component-phase">—</strong></div><div><span>INPUT ENERGY SHARE</span><strong id="component-energy">—</strong></div><button id="mute" class="button outline small">Mute bin 1</button></div>
+          <p id="component-formula" class="component-formula"></p>
+        </section>
+        <div class="lower-grid">
+          <section class="phasor-panel panel" aria-labelledby="phasor-title"><div class="panel-head"><div><p class="eyebrow">PHASE IN MOTION</p><h2 id="phasor-title">Rotating into place</h2></div><button id="play" class="button small" aria-pressed="false">Play</button></div><canvas id="phasors" width="420" height="260" role="img" aria-label="Rotating vectors for the included harmonic components; horizontal projection equals the reconstructed value minus DC."></canvas><div class="label-value"><label for="phase">Position in the period</label><output id="phase-value" for="phase">0.250</output></div><input id="phase" type="range" min="0" max="1000" value="250" /><p class="control-help">The horizontal projection adds to DC to give the reconstructed signal at the marked time.</p></section>
+          <section class="insight-panel panel" aria-labelledby="insight-title"><p class="eyebrow">WHAT TO LOOK FOR</p><h2 id="insight-title">The edge tells the story.</h2><p id="insight-copy"></p><div class="identity"><span>PARSEVAL CHECK</span><strong id="parseval">—</strong><p>Difference between time-domain and frequency-domain mean-square energy.</p></div><p class="experiment"><span>TRY THIS</span><span id="experiment-copy">Compare 8 and 32 harmonics. Then switch to Fejér averaging to trade sharpness for smoother transitions.</span></p></section>
+        </div>
+      </div>
+    </section>
+    <section id="method" class="methodology"><div><p class="eyebrow">A SMALL WINDOW INTO THE MATH</p><h2>One signal.<br />Two descriptions.</h2><p>This lab computes a normalized discrete Fourier transform directly. No server, external dataset, or approximate animation drives the numbers.</p></div><div class="method-details"><div class="formula">C<sub>k</sub> = <span>1/N</span> ∑ x<sub>j</sub> e<sup>−i2πkj/N</sup></div><p>Each coefficient measures alignment with a complex sinusoid. For real input, positive and negative frequencies pair up; amplitude is 2|C<sub>k</sub>| except at DC and Nyquist.</p><div class="formula">x̂(t) = w<sub>0</sub>C<sub>0</sub> + ∑ w<sub>k</sub>A<sub>k</sub> cos(2πkt + φ<sub>k</sub>)</div><p>Partial sums use weights of 1 through the cutoff K. Fejér averaging uses w<sub>k</sub> = 1 − k/(K + 1), gently reducing high-frequency components. Muting sets a weight to 0, including DC if selected.</p><details><summary>Numerical conventions &amp; limits</summary><p>256 uniformly spaced samples cover [0, 1), with a periodic boundary. Frequencies are cycles per period, not hertz without a physical sampling rate. DC and the Nyquist bin each contribute |C|² to mean-square energy; other one-sided bins contribute 2|C|². Phase is undefined for zero-amplitude components.</p><p>RMSE is evaluated at sample positions. Energy shown is the reconstructed mean-square energy divided by input mean-square energy; a zero signal has no defined energy percentage. Connecting sampled input points does not reveal an underlying continuous signal. The DFT cannot recover information lost to aliasing.</p><p>Drawing edits individual samples with interpolation between pointer positions. Text controls accept equally spaced values and resample them periodically. Exports contain the actual computed values, coefficients, and reconstruction weights.</p></details></div></section>
+  </main>
+  <footer class="wrap footer"><p>FOURIER / LAB <span>By Ashwin Iyer · computational mathematics</span></p><a href="https://github.com/Ashwin-Iyer1/FourierSeries">Explore the original project ↗</a></footer>
+</body>
+</html>
