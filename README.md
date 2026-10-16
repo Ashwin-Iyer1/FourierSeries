@@ -63,6 +63,9 @@ analytic sinusoid amplitudes/phases, random-signal round trips, Parseval, residu
 energy, muting, Fejér equivalence to averaged partial sums, shifts, aliasing, and
 invalid input. Run on Node 22 or later.
 
+GitHub Actions runs this numerical suite and `npm run check` on every push and
+pull request. The standalone lab needs no dependency installation or build step.
+
 ## Original project
 
 The original `index.html`, `test.py`, `csvtopoints.py`, and `logo.csv` are retained
